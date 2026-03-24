@@ -98,6 +98,9 @@ export const api = {
     return request<Shop[]>(`/shops${qs ? `?${qs}` : ''}`);
   },
 
+  categories: () =>
+    request<string[]>('/products/categories'),
+
   products: (params: {
     shopId?: string;
     category?: string;

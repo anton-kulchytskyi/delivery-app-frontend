@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { Navbar } from '@/components/Navbar';
+import { LandingPage } from '@/pages/LandingPage';
 import { ShopsPage } from '@/pages/ShopsPage';
 import { ProductsPage } from '@/pages/ProductsPage';
+import { AllProductsPage } from '@/pages/AllProductsPage';
 import { CartPage } from '@/pages/CartPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { CouponsPage } from '@/pages/CouponsPage';
@@ -14,8 +16,10 @@ function App() {
         <Navbar />
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<ShopsPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/shops" element={<ShopsPage />} />
             <Route path="/shops/:shopId" element={<ProductsPage />} />
+            <Route path="/browse" element={<AllProductsPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/coupons" element={<CouponsPage />} />

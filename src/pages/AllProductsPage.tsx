@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Plus, Check, SlidersHorizontal } from 'lucide-react';
-import { api, type Product, type Shop } from '@/lib/api';
+import { SlidersHorizontal, Plus, Check } from 'lucide-react';
+import { api, type Product } from '@/lib/api';
 import { useCart } from '@/lib/cart';
 import { useFetch } from '@/lib/useFetch';
 import { useInfiniteScroll } from '@/lib/useInfiniteScroll';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/ErrorState';
-import { toast } from 'sonner';
 import { Img } from '@/components/Img';
+import { toast } from 'sonner';
 
 const SORT_OPTIONS = [
   { value: 'price_asc', label: 'Price ↑' },
@@ -29,9 +28,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
   };
 
   return (
-    <div
-      className={`group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all duration-300 animate-fade-up stagger-${Math.min(index % 4 + 1, 4)}`}
-    >
+    <div className={`group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all duration-300 animate-fade-up stagger-${Math.min(index % 4 + 1, 4)}`}>
       <div className="aspect-3/2 overflow-hidden bg-secondary relative">
         <Img
           src={product.imageUrl}
@@ -81,97 +78,67 @@ function ProductCardSkeleton() {
   );
 }
 
-export function ProductsPage() {
-  const { shopId } = useParams<{ shopId: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const shopFromState = ((location.state ?? {}) as { shop?: Shop }).shop ?? null;
-
+export function AllProductsPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sort, setSort] = useState<'price_asc' | 'price_desc' | 'name_asc' | ''>('');
+  const [selectedShopId, setSelectedShopId] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  const { data: shops } = useFetch(() => api.shops(), []);
   const { data: categories } = useFetch(() => api.categories(), []);
-
-  // Only fetch shop if not passed via router state
-  const { data: fetchedShop } = useFetch(
-    () => shopFromState ? Promise.resolve(shopFromState) : api.shop(shopId!),
-    [shopId],
-  );
-  const shop = shopFromState ?? fetchedShop;
 
   const { items: products, loading, loadingMore, error, sentinel, refetch } = useInfiniteScroll(
     (cursor) => api.products({
-      shopId: shopId!,
+      shopId: selectedShopId || undefined,
       category: selectedCategories.length > 0 ? selectedCategories.join(',') : undefined,
       sort: sort || undefined,
       cursor,
       limit: 12,
     }),
-    [shopId, selectedCategories, sort],
+    [selectedShopId, selectedCategories, sort],
   );
 
-  const toggleCategory = (cat: string) => {
+  const toggleCategory = (cat: string) =>
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
     );
-  };
 
-  const cartCount = useCart((s) => s.totalItems());
+  const hasFilters = selectedCategories.length > 0 || sort || selectedShopId;
+
+  const resetFilters = () => {
+    setSelectedCategories([]);
+    setSort('');
+    setSelectedShopId('');
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       {/* Header */}
-      <div className="animate-fade-up mb-8">
-        <button
-          onClick={() => navigate('/shops')}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5"
-        >
-          <ArrowLeft size={14} />
-          All restaurants
-        </button>
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-primary mb-2 font-medium">
-              {shop?.category ?? ''}
-            </p>
-            <h1 className="font-display text-4xl sm:text-5xl font-light">
-              {shop?.name ?? <Skeleton className="h-10 w-64" />}
-            </h1>
-          </div>
-          <button
-            onClick={() => navigate('/cart')}
-            className="relative shrink-0 flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            Cart
-            {cartCount > 0 && (
-              <span className="bg-primary-foreground text-primary w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">
-                {cartCount}
-              </span>
-            )}
-          </button>
+      <div className="flex items-end justify-between mb-8 animate-fade-up">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-primary mb-2 font-medium">
+            All restaurants
+          </p>
+          <h1 className="font-display text-4xl sm:text-5xl font-light">
+            Browse <em>dishes</em>
+          </h1>
         </div>
-      </div>
-
-      {/* Filters bar */}
-      <div className="mb-6 flex flex-wrap items-center gap-2 animate-fade-up stagger-1">
         <button
           onClick={() => setFiltersOpen((v) => !v)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-all ${
-            filtersOpen || selectedCategories.length > 0
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-all ${
+            filtersOpen || hasFilters
               ? 'border-primary text-primary bg-primary/10'
-              : 'border-border text-muted-foreground hover:border-foreground/30'
+              : 'border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
           }`}
         >
-          <SlidersHorizontal size={12} />
-          Filter
-          {selectedCategories.length > 0 && (
-            <span className="bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
-              {selectedCategories.length}
-            </span>
-          )}
+          <SlidersHorizontal size={14} />
+          Filters
+          {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
         </button>
+      </div>
 
+      {/* Sort bar */}
+      <div className="mb-6 flex flex-wrap items-center gap-2 animate-fade-up stagger-1">
         {SORT_OPTIONS.map((o) => (
           <button
             key={o.value}
@@ -187,33 +154,57 @@ export function ProductsPage() {
         ))}
       </div>
 
-      {/* Category chips */}
+      {/* Filters panel */}
       {filtersOpen && (
-        <div className="mb-6 p-4 bg-card border border-border rounded-xl animate-fade-up">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Category</p>
-          <div className="flex flex-wrap gap-2">
-            {(categories ?? []).map((cat) => (
-              <button
-                key={cat}
-                onClick={() => toggleCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${
-                  selectedCategories.includes(cat)
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-            {selectedCategories.length > 0 && (
-              <button
-                onClick={() => setSelectedCategories([])}
-                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 px-2"
-              >
-                Clear
-              </button>
-            )}
+        <div className="mb-6 p-5 bg-card border border-border rounded-xl space-y-5 animate-fade-up">
+          {/* Restaurant filter */}
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Restaurant</p>
+            <div className="flex flex-wrap gap-2">
+              {(shops ?? []).map((shop) => (
+                <button
+                  key={shop.id}
+                  onClick={() => setSelectedShopId(selectedShopId === shop.id ? '' : shop.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${
+                    selectedShopId === shop.id
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
+                  }`}
+                >
+                  {shop.name}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Category filter */}
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Category</p>
+            <div className="flex flex-wrap gap-2">
+              {(categories ?? []).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => toggleCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${
+                    selectedCategories.includes(cat)
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {hasFilters && (
+            <button
+              onClick={resetFilters}
+              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+            >
+              Reset all filters
+            </button>
+          )}
         </div>
       )}
 
@@ -232,13 +223,10 @@ export function ProductsPage() {
       )}
 
       {!loading && !error && products.length === 0 && (
-        <div className="text-center py-20 text-muted-foreground animate-fade-up">
+        <div className="text-center py-20 animate-fade-up">
           <p className="text-5xl mb-4">🍽</p>
-          <p className="font-display text-xl">No items found</p>
-          <button
-            onClick={() => setSelectedCategories([])}
-            className="mt-3 text-sm text-primary hover:underline"
-          >
+          <p className="font-display text-xl text-muted-foreground">No dishes found</p>
+          <button onClick={resetFilters} className="mt-3 text-sm text-primary hover:underline">
             Clear filters
           </button>
         </div>
