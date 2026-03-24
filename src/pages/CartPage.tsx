@@ -7,6 +7,7 @@ import { useCart } from '@/lib/cart';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Img } from '@/components/Img';
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -187,7 +188,7 @@ export function CartPage() {
                 key={item.product.id}
                 className={`flex gap-4 p-4 bg-card border border-border rounded-xl animate-fade-up stagger-${Math.min(i + 1, 4)}`}
               >
-                <img
+                <Img
                   src={item.product.imageUrl}
                   alt={item.product.name}
                   className="w-16 h-16 rounded-lg object-cover bg-secondary shrink-0"

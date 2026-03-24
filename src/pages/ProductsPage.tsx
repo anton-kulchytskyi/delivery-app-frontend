@@ -5,6 +5,7 @@ import { api, type Product, type Shop } from '@/lib/api';
 import { useCart } from '@/lib/cart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { Img } from '@/components/Img';
 
 const CATEGORIES = ['Burgers', 'Pizza', 'Sushi', 'Drinks', 'Desserts', 'Salads', 'Pasta', 'Tacos'];
 const SORT_OPTIONS = [
@@ -31,9 +32,10 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       className={`group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all duration-300 animate-fade-up stagger-${Math.min(index % 4 + 1, 4)}`}
     >
       <div className="aspect-[3/2] overflow-hidden bg-secondary relative">
-        <img
+        <Img
           src={product.imageUrl}
           alt={product.name}
+          placeholderIcon="🍔"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />

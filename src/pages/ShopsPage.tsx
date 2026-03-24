@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Star, SlidersHorizontal } from 'lucide-react';
 import { api, type Shop } from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Img } from '@/components/Img';
 
 function RatingDots({ value, max = 5 }: { value: number; max?: number }) {
   return (
@@ -28,7 +29,7 @@ function ShopCard({ shop, index }: { shop: Shop; index: number }) {
       className={`group text-left bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.15)] transition-all duration-300 animate-fade-up stagger-${Math.min(index % 4 + 1, 4)}`}
     >
       <div className="aspect-[4/3] overflow-hidden bg-secondary relative">
-        <img
+        <Img
           src={shop.imageUrl}
           alt={shop.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { api, type Coupon } from '@/lib/api';
+import { Img } from '@/components/Img';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
@@ -22,9 +23,10 @@ function CouponCard({ coupon, index }: { coupon: Coupon; index: number }) {
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl" />
 
       <div className="pl-5 pr-5 pt-5 pb-4 flex gap-4 items-start">
-        <img
+        <Img
           src={coupon.imageUrl}
           alt={coupon.name}
+          placeholderIcon="🏷"
           className="w-14 h-14 rounded-lg object-cover bg-secondary shrink-0"
         />
         <div className="flex-1 min-w-0">

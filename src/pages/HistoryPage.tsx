@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { api, type Order } from '@/lib/api';
+import { Img } from '@/components/Img';
 import { useCart } from '@/lib/cart';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -82,7 +83,7 @@ function OrderCard({ order }: { order: Order }) {
         <div className="border-t border-border">
           {order.items.map((item) => (
             <div key={item.id} className="flex items-center gap-3 px-5 py-3 border-b border-border/50 last:border-0">
-              <img
+              <Img
                 src={item.product.imageUrl}
                 alt={item.product.name}
                 className="w-10 h-10 rounded-lg object-cover bg-secondary shrink-0"
