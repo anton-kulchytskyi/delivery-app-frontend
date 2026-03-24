@@ -89,7 +89,7 @@ export function CartPage() {
   const subtotal = useCart((s) => s.subtotal);
   const total = useCart((s) => s.total);
 
-  const { form, errors, submitting, success, setField, submit } = useOrderSubmit(prefill);
+  const { form, errors, submitting, success, setField, setFieldValue, submit } = useOrderSubmit(prefill);
 
   const handleSubmit = async (e: React.FormEvent) => {
     if (items.length === 0) { toast.error('Cart is empty'); return; }
@@ -218,28 +218,56 @@ export function CartPage() {
             <form onSubmit={handleSubmit} className="p-5 bg-card border border-border rounded-xl space-y-4 animate-fade-up stagger-3">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Delivery details</p>
 
-              {([
-                { field: 'name', label: 'Full name', type: 'text', placeholder: 'John Doe' },
-                { field: 'phone', label: 'Phone', type: 'tel', placeholder: '+380991234567' },
-                { field: 'address', label: 'Address', type: 'text', placeholder: 'Kyiv, Khreshchatyk 1' },
-              ] as const).map(({ field, label, type, placeholder }) => (
-                <div key={field}>
-                  <Label htmlFor={field} className="text-xs text-muted-foreground mb-1.5 block">
-                    {label}
-                  </Label>
-                  <Input
-                    id={field}
-                    type={type}
-                    placeholder={placeholder}
-                    value={form[field]}
-                    onChange={setField(field)}
-                    className={`bg-secondary border-border text-sm ${errors[field] ? 'border-destructive' : ''}`}
-                  />
-                  {errors[field] && (
-                    <p className="text-xs text-destructive mt-1">{errors[field]}</p>
-                  )}
-                </div>
-              ))}
+              <div>
+                <Label htmlFor="name" className="text-xs text-muted-foreground mb-1.5 block">Full name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={form.name}
+                  maxLength={100}
+                  onChange={setField('name')}
+                  className={`bg-secondary border-border text-sm ${errors.name ? 'border-destructive' : ''}`}
+                />
+                <p className="text-xs mt-1 text-destructive empty:text-muted-foreground">
+                  {errors.name ?? 'Max 100 characters'}
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="phone" className="text-xs text-muted-foreground mb-1.5 block">Phone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const withoutPrefix = raw.startsWith('+38') ? raw.slice(3) : raw;
+                    const digits = withoutPrefix.replace(/\D/g, '').slice(0, 10);
+                    setFieldValue('phone', '+38' + digits);
+                  }}
+                  className={`bg-secondary border-border text-sm ${errors.phone ? 'border-destructive' : ''}`}
+                />
+                <p className="text-xs mt-1 text-destructive empty:text-muted-foreground">
+                  {errors.phone ?? '+38 followed by 10 digits'}
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="address" className="text-xs text-muted-foreground mb-1.5 block">Address</Label>
+                <Input
+                  id="address"
+                  type="text"
+                  placeholder="Kyiv, Khreshchatyk 1"
+                  value={form.address}
+                  maxLength={200}
+                  onChange={setField('address')}
+                  className={`bg-secondary border-border text-sm ${errors.address ? 'border-destructive' : ''}`}
+                />
+                <p className="text-xs mt-1 text-destructive empty:text-muted-foreground">
+                  {errors.address ?? 'Max 200 characters'}
+                </p>
+              </div>
 
               <button
                 type="submit"

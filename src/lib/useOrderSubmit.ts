@@ -9,6 +9,7 @@ interface UseOrderSubmitResult {
   submitting: boolean;
   success: boolean;
   setField: (field: keyof OrderFormData) => (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setFieldValue: (field: keyof OrderFormData, value: string) => void;
   submit: (e: React.FormEvent) => Promise<void>;
 }
 
@@ -16,7 +17,7 @@ export function useOrderSubmit(initialValues?: Partial<OrderFormData>): UseOrder
   const { items, couponCode, clearCart } = useCart();
   const [form, setForm] = useState<OrderFormData>({
     name: initialValues?.name ?? '',
-    phone: initialValues?.phone ?? '',
+    phone: initialValues?.phone ?? '+38',
     address: initialValues?.address ?? '',
   });
   const [errors, setErrors] = useState<OrderFormErrors>({});
@@ -28,6 +29,11 @@ export function useOrderSubmit(initialValues?: Partial<OrderFormData>): UseOrder
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
       if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
     };
+
+  const setFieldValue = (field: keyof OrderFormData, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,5 +64,5 @@ export function useOrderSubmit(initialValues?: Partial<OrderFormData>): UseOrder
     }
   };
 
-  return { form, errors, submitting, success, setField, submit };
+  return { form, errors, submitting, success, setField, setFieldValue, submit };
 }
