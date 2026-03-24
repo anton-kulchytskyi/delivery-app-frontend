@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 function OrderCard({ order }: { order: Order }) {
   const navigate = useNavigate();
   const mergeReorder = useCart((s) => s.mergeReorder);
-  const addItem = useCart((s) => s.addItem);
   const [expanded, setExpanded] = useState(false);
   const [reordering, setReordering] = useState(false);
 
@@ -20,23 +19,20 @@ function OrderCard({ order }: { order: Order }) {
   const handleReorder = async () => {
     setReordering(true);
     try {
-      const items = await api.reorder(order.id);
-      for (const item of items) {
+      const apiItems = await api.reorder(order.id);
+      const cartItems = apiItems.flatMap((item) => {
         const orderItem = order.items.find((oi) => oi.productId === item.productId);
-        if (orderItem) {
-          mergeReorder([{ productId: item.productId, quantity: item.quantity, product: orderItem.product }]);
-        }
-      }
-      toast.success('Items added to cart');
-      navigate('/cart', { state: customerState });
+        return orderItem ? [{ productId: item.productId, quantity: item.quantity, product: orderItem.product }] : [];
+      });
+      mergeReorder(cartItems);
     } catch {
-      for (const item of order.items) {
-        addItem(item.product, item.quantity);
-      }
-      toast.success('Items added to cart');
-      navigate('/cart', { state: customerState });
+      mergeReorder(
+        order.items.map((item) => ({ productId: item.productId, quantity: item.quantity, product: item.product })),
+      );
     } finally {
       setReordering(false);
+      toast.success('Items added to cart');
+      navigate('/cart', { state: customerState });
     }
   };
 

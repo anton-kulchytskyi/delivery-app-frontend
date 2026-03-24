@@ -1,5 +1,14 @@
 const BASE_URL = import.meta.env.VITE_API_URL as string;
 
+function buildQuery(params: Record<string, string | number | boolean | undefined | null>): string {
+  const q = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null && value !== '') q.set(key, String(value));
+  }
+  const qs = q.toString();
+  return qs ? `?${qs}` : '';
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -90,13 +99,8 @@ export const api = {
   shop: (id: string) =>
     request<Shop>(`/shops/${id}`),
 
-  shops: (params?: { rating_min?: number; rating_max?: number }) => {
-    const q = new URLSearchParams();
-    if (params?.rating_min != null) q.set('rating_min', String(params.rating_min));
-    if (params?.rating_max != null) q.set('rating_max', String(params.rating_max));
-    const qs = q.toString();
-    return request<Shop[]>(`/shops${qs ? `?${qs}` : ''}`);
-  },
+  shops: (params?: { rating_min?: number; rating_max?: number }) =>
+    request<Shop[]>(`/shops${buildQuery({ rating_min: params?.rating_min, rating_max: params?.rating_max })}`),
 
   categories: () =>
     request<string[]>('/products/categories'),
@@ -107,25 +111,14 @@ export const api = {
     sort?: 'price_asc' | 'price_desc' | 'name_asc';
     cursor?: string;
     limit?: number;
-  }) => {
-    const q = new URLSearchParams();
-    if (params.shopId) q.set('shopId', params.shopId);
-    if (params.category) q.set('category', params.category);
-    if (params.sort) q.set('sort', params.sort);
-    if (params.cursor) q.set('cursor', params.cursor);
-    if (params.limit) q.set('limit', String(params.limit));
-    return request<ProductsResponse>(`/products?${q.toString()}`);
-  },
+  }) =>
+    request<ProductsResponse>(`/products${buildQuery(params)}`),
 
   createOrder: (body: CreateOrderBody) =>
     request<Order>('/orders', { method: 'POST', body: JSON.stringify(body) }),
 
-  searchOrders: (params: { id?: string; phone?: string }) => {
-    const q = new URLSearchParams();
-    if (params.id) q.set('id', params.id);
-    if (params.phone) q.set('phone', params.phone);
-    return request<Order[]>(`/orders?${q.toString()}`);
-  },
+  searchOrders: (params: { id?: string; phone?: string }) =>
+    request<Order[]>(`/orders${buildQuery(params)}`),
 
   reorder: (id: string) =>
     request<{ productId: string; quantity: number; priceAtOrder: number }[]>(
