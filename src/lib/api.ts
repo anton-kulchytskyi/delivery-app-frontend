@@ -87,6 +87,9 @@ export const api = {
   health: () =>
     request<{ status: string }>('/health'),
 
+  shop: (id: string) =>
+    request<Shop>(`/shops/${id}`),
+
   shops: (params?: { rating_min?: number; rating_max?: number }) => {
     const q = new URLSearchParams();
     if (params?.rating_min != null) q.set('rating_min', String(params.rating_min));

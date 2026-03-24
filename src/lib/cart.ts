@@ -21,6 +21,7 @@ interface CartStore {
   removeCoupon: () => void;
   mergeReorder: (items: { productId: string; quantity: number; product?: Product }[]) => void;
 
+  totalItems: () => number;
   subtotal: () => number;
   total: () => number;
 }
@@ -86,6 +87,8 @@ export const useCart = create<CartStore>()(
           return { items: newItems };
         });
       },
+
+      totalItems: () => get().items.reduce((n, i) => n + i.quantity, 0),
 
       subtotal: () => get().items.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
 

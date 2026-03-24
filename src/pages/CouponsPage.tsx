@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { api, type Coupon } from '@/lib/api';
+import { useFetch } from '@/lib/useFetch';
 import { Img } from '@/components/Img';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState } from '@/components/ErrorState';
 import { toast } from 'sonner';
 
 function CouponCard({ coupon, index }: { coupon: Coupon; index: number }) {
@@ -75,12 +77,7 @@ function CouponCardSkeleton() {
 }
 
 export function CouponsPage() {
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.coupons().then(setCoupons).finally(() => setLoading(false));
-  }, []);
+  const { data: coupons, loading, error, refetch } = useFetch(() => api.coupons(), []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
@@ -94,14 +91,18 @@ export function CouponsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => <CouponCardSkeleton key={i} />)
-          : coupons.map((coupon, i) => <CouponCard key={coupon.id} coupon={coupon} index={i} />)
-        }
-      </div>
+      {error && <ErrorState message={error} onRetry={refetch} />}
 
-      {!loading && coupons.length === 0 && (
+      {!error && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => <CouponCardSkeleton key={i} />)
+            : (coupons ?? []).map((coupon, i) => <CouponCard key={coupon.id} coupon={coupon} index={i} />)
+          }
+        </div>
+      )}
+
+      {!loading && !error && (coupons ?? []).length === 0 && (
         <div className="text-center py-24 animate-fade-up">
           <p className="text-5xl mb-4">🏷</p>
           <p className="font-display text-xl text-muted-foreground">No coupons available</p>

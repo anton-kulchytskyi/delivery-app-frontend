@@ -4,7 +4,7 @@ import { useCart } from '@/lib/cart';
 
 export function Navbar() {
   const location = useLocation();
-  const itemCount = useCart((s) => s.items.reduce((n, i) => n + i.quantity, 0));
+  const itemCount = useCart((s) => s.totalItems());
 
   const links = [
     { to: '/history', label: 'History', icon: Clock },

@@ -1,9 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, SlidersHorizontal } from 'lucide-react';
 import { api, type Shop } from '@/lib/api';
+import { useFetch } from '@/lib/useFetch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Img } from '@/components/Img';
+import { ErrorState } from '@/components/ErrorState';
 
 function RatingDots({ value, max = 5 }: { value: number; max?: number }) {
   return (
@@ -25,7 +27,7 @@ function ShopCard({ shop, index }: { shop: Shop; index: number }) {
   const navigate = useNavigate();
   return (
     <button
-      onClick={() => navigate(`/shops/${shop.id}`)}
+      onClick={() => navigate(`/shops/${shop.id}`, { state: { shop } })}
       className={`group text-left bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.15)] transition-all duration-300 animate-fade-up stagger-${Math.min(index % 4 + 1, 4)}`}
     >
       <div className="aspect-4/3 overflow-hidden bg-secondary relative">
@@ -63,26 +65,17 @@ function ShopCardSkeleton() {
 }
 
 export function ShopsPage() {
-  const [shops, setShops] = useState<Shop[]>([]);
-  const [loading, setLoading] = useState(true);
   const [ratingMin, setRatingMin] = useState('');
   const [ratingMax, setRatingMax] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const fetchShops = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: { rating_min?: number; rating_max?: number } = {};
-      if (ratingMin) params.rating_min = parseFloat(ratingMin);
-      if (ratingMax) params.rating_max = parseFloat(ratingMax);
-      const data = await api.shops(params);
-      setShops(data);
-    } finally {
-      setLoading(false);
-    }
-  }, [ratingMin, ratingMax]);
-
-  useEffect(() => { fetchShops(); }, [fetchShops]);
+  const { data: shops, loading, error, refetch } = useFetch(
+    () => api.shops({
+      rating_min: ratingMin ? parseFloat(ratingMin) : undefined,
+      rating_max: ratingMax ? parseFloat(ratingMax) : undefined,
+    }),
+    [ratingMin, ratingMax],
+  );
 
   const resetFilters = () => { setRatingMin(''); setRatingMax(''); };
 
@@ -170,15 +163,20 @@ export function ShopsPage() {
         </div>
       )}
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {loading
-          ? Array.from({ length: 8 }).map((_, i) => <ShopCardSkeleton key={i} />)
-          : shops.map((shop, i) => <ShopCard key={shop.id} shop={shop} index={i} />)
-        }
-      </div>
+      {/* Error */}
+      {error && <ErrorState message={error} onRetry={refetch} />}
 
-      {!loading && shops.length === 0 && (
+      {/* Grid */}
+      {!error && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {loading
+            ? Array.from({ length: 8 }).map((_, i) => <ShopCardSkeleton key={i} />)
+            : (shops ?? []).map((shop, i) => <ShopCard key={shop.id} shop={shop} index={i} />)
+          }
+        </div>
+      )}
+
+      {!loading && !error && (shops ?? []).length === 0 && (
         <div className="text-center py-20 text-muted-foreground animate-fade-up">
           <p className="text-5xl mb-4">🍽</p>
           <p className="font-display text-xl">No restaurants found</p>

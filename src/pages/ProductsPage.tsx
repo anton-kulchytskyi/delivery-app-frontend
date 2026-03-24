@@ -1,15 +1,17 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Plus, Check, SlidersHorizontal } from 'lucide-react';
 import { api, type Product, type Shop } from '@/lib/api';
 import { useCart } from '@/lib/cart';
+import { useFetch } from '@/lib/useFetch';
+import { useInfiniteScroll } from '@/lib/useInfiniteScroll';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ErrorState } from '@/components/ErrorState';
 import { toast } from 'sonner';
 import { Img } from '@/components/Img';
 
 const CATEGORIES = ['Burgers', 'Pizza', 'Sushi', 'Drinks', 'Desserts', 'Salads', 'Pasta', 'Tacos'];
 const SORT_OPTIONS = [
-  { value: '', label: 'Default' },
   { value: 'price_asc', label: 'Price ↑' },
   { value: 'price_desc', label: 'Price ↓' },
   { value: 'name_asc', label: 'Name A–Z' },
@@ -83,72 +85,30 @@ function ProductCardSkeleton() {
 export function ProductsPage() {
   const { shopId } = useParams<{ shopId: string }>();
   const navigate = useNavigate();
-  const [shop, setShop] = useState<Shop | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const location = useLocation();
+  const shopFromState = ((location.state ?? {}) as { shop?: Shop }).shop ?? null;
+
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sort, setSort] = useState<'price_asc' | 'price_desc' | 'name_asc' | ''>('');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const loaderRef = useRef<HTMLDivElement>(null);
 
-  // Load shop info
-  useEffect(() => {
-    api.shops().then((all) => {
-      const found = all.find((s) => s.id === shopId);
-      if (found) setShop(found);
-    });
-  }, [shopId]);
+  // Only fetch shop if not passed via router state
+  const { data: fetchedShop } = useFetch(
+    () => shopFromState ? Promise.resolve(shopFromState) : api.shop(shopId!),
+    [shopId],
+  );
+  const shop = shopFromState ?? fetchedShop;
 
-  const fetchProducts = useCallback(async (reset = false) => {
-    if (!shopId) return;
-    if (reset) setLoading(true); else setLoadingMore(true);
-    try {
-      const params: Parameters<typeof api.products>[0] = {
-        shopId,
-        limit: 12,
-      };
-      if (selectedCategories.length > 0) params.category = selectedCategories.join(',');
-      if (sort) params.sort = sort;
-      const res = await api.products(params);
-      setProducts(reset ? res.data : (prev) => [...prev, ...res.data]);
-      setNextCursor(res.nextCursor);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [shopId, selectedCategories, sort]);
-
-  useEffect(() => { fetchProducts(true); }, [fetchProducts]);
-
-  // Infinite scroll
-  useEffect(() => {
-    if (!loaderRef.current) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && nextCursor && !loadingMore) {
-          setLoadingMore(true);
-          if (!shopId) return;
-          const params: Parameters<typeof api.products>[0] = {
-            shopId,
-            cursor: nextCursor,
-            limit: 12,
-          };
-          if (selectedCategories.length > 0) params.category = selectedCategories.join(',');
-          if (sort) params.sort = sort;
-          api.products(params).then((res) => {
-            setProducts((prev) => [...prev, ...res.data]);
-            setNextCursor(res.nextCursor);
-            setLoadingMore(false);
-          });
-        }
-      },
-      { threshold: 0.1 },
-    );
-    obs.observe(loaderRef.current);
-    return () => obs.disconnect();
-  }, [nextCursor, loadingMore, shopId, selectedCategories, sort]);
+  const { items: products, loading, loadingMore, error, sentinel, refetch } = useInfiniteScroll(
+    (cursor) => api.products({
+      shopId: shopId!,
+      category: selectedCategories.length > 0 ? selectedCategories.join(',') : undefined,
+      sort: sort || undefined,
+      cursor,
+      limit: 12,
+    }),
+    [shopId, selectedCategories, sort],
+  );
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
@@ -156,7 +116,7 @@ export function ProductsPage() {
     );
   };
 
-  const cartCount = useCart((s) => s.items.reduce((n, i) => n + i.quantity, 0));
+  const cartCount = useCart((s) => s.totalItems());
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
@@ -211,11 +171,10 @@ export function ProductsPage() {
           )}
         </button>
 
-        {/* Sort */}
-        {SORT_OPTIONS.filter((o) => o.value).map((o) => (
+        {SORT_OPTIONS.map((o) => (
           <button
             key={o.value}
-            onClick={() => setSort(sort === o.value ? '' : (o.value as typeof sort))}
+            onClick={() => setSort(sort === o.value ? '' : o.value)}
             className={`px-3 py-1.5 rounded-lg border text-xs transition-all ${
               sort === o.value
                 ? 'border-primary text-primary bg-primary/10'
@@ -257,16 +216,21 @@ export function ProductsPage() {
         </div>
       )}
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {loading
-          ? Array.from({ length: 12 }).map((_, i) => <ProductCardSkeleton key={i} />)
-          : products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)
-        }
-        {loadingMore && Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={`more-${i}`} />)}
-      </div>
+      {/* Error */}
+      {error && <ErrorState message={error} onRetry={refetch} />}
 
-      {!loading && products.length === 0 && (
+      {/* Grid */}
+      {!error && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {loading
+            ? Array.from({ length: 12 }).map((_, i) => <ProductCardSkeleton key={i} />)
+            : products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)
+          }
+          {loadingMore && Array.from({ length: 4 }).map((_, i) => <ProductCardSkeleton key={`more-${i}`} />)}
+        </div>
+      )}
+
+      {!loading && !error && products.length === 0 && (
         <div className="text-center py-20 text-muted-foreground animate-fade-up">
           <p className="text-5xl mb-4">🍽</p>
           <p className="font-display text-xl">No items found</p>
@@ -279,8 +243,7 @@ export function ProductsPage() {
         </div>
       )}
 
-      {/* Infinite scroll sentinel */}
-      <div ref={loaderRef} className="h-4" />
+      <div ref={sentinel} className="h-4" />
     </div>
   );
 }

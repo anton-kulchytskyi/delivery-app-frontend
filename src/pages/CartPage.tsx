@@ -1,29 +1,22 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Minus, Plus, X, Tag, CheckCircle2 } from 'lucide-react';
-import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useCart } from '@/lib/cart';
+import { useOrderSubmit } from '@/lib/useOrderSubmit';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Img } from '@/components/Img';
 
-// ─── Validation ───────────────────────────────────────────────────────────────
-
-const orderSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: z.string().regex(/^\+?[0-9\s\-()]{7,20}$/, 'Enter a valid phone number'),
-  address: z.string().min(5, 'Address must be at least 5 characters'),
-});
-
-type OrderForm = z.infer<typeof orderSchema>;
-type FormErrors = Partial<Record<keyof OrderForm, string>>;
-
 // ─── CouponInput ──────────────────────────────────────────────────────────────
 
 function CouponInput() {
-  const { couponCode, couponName, discountPercent, setCoupon, removeCoupon } = useCart();
+  const couponCode = useCart((s) => s.couponCode);
+  const couponName = useCart((s) => s.couponName);
+  const discountPercent = useCart((s) => s.discountPercent);
+  const setCoupon = useCart((s) => s.setCoupon);
+  const removeCoupon = useCart((s) => s.removeCoupon);
   const [code, setCode] = useState('');
   const [validating, setValidating] = useState(false);
 
@@ -88,51 +81,23 @@ function CouponInput() {
 export function CartPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const prefill = location.state as { name?: string; phone?: string; address?: string } | null;
-  const { items, updateQuantity, removeItem, subtotal, total, couponCode, clearCart } = useCart();
-  const [form, setForm] = useState<OrderForm>({
-    name: prefill?.name ?? '',
-    phone: prefill?.phone ?? '',
-    address: prefill?.address ?? '',
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const prefill = ((location.state ?? {}) as { name?: string; phone?: string; address?: string });
 
-  const set = (field: keyof OrderForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
+  const items = useCart((s) => s.items);
+  const updateQuantity = useCart((s) => s.updateQuantity);
+  const removeItem = useCart((s) => s.removeItem);
+  const subtotal = useCart((s) => s.subtotal);
+  const total = useCart((s) => s.total);
+
+  const { form, errors, submitting, success, setField, submit } = useOrderSubmit(prefill);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     if (items.length === 0) { toast.error('Cart is empty'); return; }
-
-    const result = orderSchema.safeParse(form);
-    if (!result.success) {
-      const errs: FormErrors = {};
-      result.error.issues.forEach((issue) => {
-        const field = issue.path[0] as keyof OrderForm;
-        errs[field] = issue.message;
-      });
-      setErrors(errs);
-      return;
-    }
-
-    setSubmitting(true);
     try {
-      await api.createOrder({
-        ...result.data,
-        couponCode: couponCode ?? undefined,
-        items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
-      });
-      setSuccess(true);
-      clearCart();
-      toast.success('Order placed successfully!');
+      await submit(e);
+      if (!success) toast.success('Order placed successfully!');
     } catch (err) {
       toast.error((err as Error).message || 'Failed to place order');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -268,7 +233,7 @@ export function CartPage() {
                     type={type}
                     placeholder={placeholder}
                     value={form[field]}
-                    onChange={set(field)}
+                    onChange={setField(field)}
                     className={`bg-secondary border-border text-sm ${errors[field] ? 'border-destructive' : ''}`}
                   />
                   {errors[field] && (

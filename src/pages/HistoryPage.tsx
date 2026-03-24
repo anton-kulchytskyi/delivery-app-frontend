@@ -10,7 +10,8 @@ import { toast } from 'sonner';
 
 function OrderCard({ order }: { order: Order }) {
   const navigate = useNavigate();
-  const { mergeReorder, addItem } = useCart();
+  const mergeReorder = useCart((s) => s.mergeReorder);
+  const addItem = useCart((s) => s.addItem);
   const [expanded, setExpanded] = useState(false);
   const [reordering, setReordering] = useState(false);
 
