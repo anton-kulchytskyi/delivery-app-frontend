@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Minus, Plus, X, Tag, CheckCircle2 } from 'lucide-react';
 import { z } from 'zod';
 import { api } from '@/lib/api';
@@ -87,8 +87,14 @@ function CouponInput() {
 
 export function CartPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefill = location.state as { name?: string; phone?: string; address?: string } | null;
   const { items, updateQuantity, removeItem, subtotal, total, couponCode, clearCart } = useCart();
-  const [form, setForm] = useState<OrderForm>({ name: '', phone: '', address: '' });
+  const [form, setForm] = useState<OrderForm>({
+    name: prefill?.name ?? '',
+    phone: prefill?.phone ?? '',
+    address: prefill?.address ?? '',
+  });
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);

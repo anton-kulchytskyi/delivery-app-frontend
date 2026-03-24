@@ -14,6 +14,8 @@ function OrderCard({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
   const [reordering, setReordering] = useState(false);
 
+  const customerState = { name: order.name, phone: order.phone, address: order.address };
+
   const handleReorder = async () => {
     setReordering(true);
     try {
@@ -25,13 +27,13 @@ function OrderCard({ order }: { order: Order }) {
         }
       }
       toast.success('Items added to cart');
-      navigate('/cart');
+      navigate('/cart', { state: customerState });
     } catch {
       for (const item of order.items) {
         addItem(item.product, item.quantity);
       }
       toast.success('Items added to cart');
-      navigate('/cart');
+      navigate('/cart', { state: customerState });
     } finally {
       setReordering(false);
     }
