@@ -229,9 +229,10 @@ export function CartPage() {
                   onChange={setField('name')}
                   className={`bg-secondary border-border text-sm ${errors.name ? 'border-destructive' : ''}`}
                 />
-                <p className="text-xs mt-1 text-destructive empty:text-muted-foreground">
-                  {errors.name ?? 'Max 100 characters'}
-                </p>
+                {errors.name
+                  ? <p className="text-xs mt-1 text-destructive">{errors.name}</p>
+                  : <p className="text-xs mt-1 text-muted-foreground">Min 2, max 100 characters</p>
+                }
               </div>
 
               <div>
@@ -248,9 +249,10 @@ export function CartPage() {
                   }}
                   className={`bg-secondary border-border text-sm ${errors.phone ? 'border-destructive' : ''}`}
                 />
-                <p className="text-xs mt-1 text-destructive empty:text-muted-foreground">
-                  {errors.phone ?? '+38 followed by 10 digits'}
-                </p>
+                {errors.phone
+                  ? <p className="text-xs mt-1 text-destructive">{errors.phone}</p>
+                  : <p className="text-xs mt-1 text-muted-foreground">+38 followed by 10 digits</p>
+                }
               </div>
 
               <div>
@@ -264,9 +266,10 @@ export function CartPage() {
                   onChange={setField('address')}
                   className={`bg-secondary border-border text-sm ${errors.address ? 'border-destructive' : ''}`}
                 />
-                <p className="text-xs mt-1 text-destructive empty:text-muted-foreground">
-                  {errors.address ?? 'Max 200 characters'}
-                </p>
+                {errors.address
+                  ? <p className="text-xs mt-1 text-destructive">{errors.address}</p>
+                  : <p className="text-xs mt-1 text-muted-foreground">Min 5, max 200 characters</p>
+                }
               </div>
 
               <button
