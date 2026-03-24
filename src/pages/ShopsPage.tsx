@@ -28,14 +28,14 @@ function ShopCard({ shop, index }: { shop: Shop; index: number }) {
       onClick={() => navigate(`/shops/${shop.id}`)}
       className={`group text-left bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.15)] transition-all duration-300 animate-fade-up stagger-${Math.min(index % 4 + 1, 4)}`}
     >
-      <div className="aspect-[4/3] overflow-hidden bg-secondary relative">
+      <div className="aspect-4/3 overflow-hidden bg-secondary relative">
         <Img
           src={shop.imageUrl}
           alt={shop.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
         <span className="absolute bottom-3 left-3 text-xs font-medium bg-black/60 text-white backdrop-blur-sm px-2 py-1 rounded-md">
           {shop.category}
         </span>
@@ -53,7 +53,7 @@ function ShopCard({ shop, index }: { shop: Shop; index: number }) {
 function ShopCardSkeleton() {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
-      <Skeleton className="aspect-[4/3] w-full" />
+      <Skeleton className="aspect-4/3 w-full" />
       <div className="p-4 space-y-2">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-3 w-1/3" />

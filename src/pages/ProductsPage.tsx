@@ -31,7 +31,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
     <div
       className={`group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all duration-300 animate-fade-up stagger-${Math.min(index % 4 + 1, 4)}`}
     >
-      <div className="aspect-[3/2] overflow-hidden bg-secondary relative">
+      <div className="aspect-3/2 overflow-hidden bg-secondary relative">
         <Img
           src={product.imageUrl}
           alt={product.name}
@@ -68,7 +68,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 function ProductCardSkeleton() {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
-      <Skeleton className="aspect-[3/2] w-full" />
+      <Skeleton className="aspect-3/2 w-full" />
       <div className="p-4 flex justify-between">
         <div className="space-y-2 flex-1">
           <Skeleton className="h-4 w-4/5" />

@@ -13,7 +13,6 @@ import { Img } from '@/components/Img';
 
 const orderSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
   phone: z.string().min(7, 'Phone must be at least 7 characters'),
   address: z.string().min(5, 'Address must be at least 5 characters'),
 });
@@ -89,7 +88,7 @@ function CouponInput() {
 export function CartPage() {
   const navigate = useNavigate();
   const { items, updateQuantity, removeItem, subtotal, total, couponCode, clearCart } = useCart();
-  const [form, setForm] = useState<OrderForm>({ name: '', email: '', phone: '', address: '' });
+  const [form, setForm] = useState<OrderForm>({ name: '', phone: '', address: '' });
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -251,7 +250,6 @@ export function CartPage() {
 
               {([
                 { field: 'name', label: 'Full name', type: 'text', placeholder: 'John Doe' },
-                { field: 'email', label: 'Email', type: 'email', placeholder: 'john@example.com' },
                 { field: 'phone', label: 'Phone', type: 'tel', placeholder: '+380991234567' },
                 { field: 'address', label: 'Address', type: 'text', placeholder: 'Kyiv, Khreshchatyk 1' },
               ] as const).map(({ field, label, type, placeholder }) => (

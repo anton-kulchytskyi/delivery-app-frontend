@@ -74,7 +74,7 @@ export interface CouponValidation {
 
 export interface CreateOrderBody {
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   address: string;
   couponCode?: string;
@@ -114,10 +114,9 @@ export const api = {
   createOrder: (body: CreateOrderBody) =>
     request<Order>('/orders', { method: 'POST', body: JSON.stringify(body) }),
 
-  searchOrders: (params: { id?: string; email?: string; phone?: string }) => {
+  searchOrders: (params: { id?: string; phone?: string }) => {
     const q = new URLSearchParams();
     if (params.id) q.set('id', params.id);
-    if (params.email) q.set('email', params.email);
     if (params.phone) q.set('phone', params.phone);
     return request<Order[]>(`/orders?${q.toString()}`);
   },
