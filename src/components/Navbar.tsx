@@ -1,14 +1,21 @@
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Clock, Tag, Store, UtensilsCrossed } from 'lucide-react';
+import { ShoppingBag, Clock, Tag, Store, UtensilsCrossed, type LucideIcon } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 
-const NAV_ITEMS = [
+interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  isCart?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { to: '/shops', label: 'Restaurants', icon: Store },
   { to: '/browse', label: 'Products', icon: UtensilsCrossed },
   { to: '/history', label: 'History', icon: Clock },
   { to: '/coupons', label: 'Coupons', icon: Tag },
   { to: '/cart', label: 'Cart', icon: ShoppingBag, isCart: true },
-] as const;
+];
 
 export function Navbar() {
   const location = useLocation();
@@ -81,7 +88,7 @@ export function Navbar() {
                 <div className="relative">
                   <Icon size={20} strokeWidth={active ? 2.2 : 1.8} />
                   {isCart && itemCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 flex items-center justify-center bg-primary text-primary-foreground text-[9px] font-bold rounded-full px-1">
+                    <span className="absolute -top-1.5 -right-2 min-w-4 h-4 flex items-center justify-center bg-primary text-primary-foreground text-[9px] font-bold rounded-full px-1">
                       {itemCount}
                     </span>
                   )}

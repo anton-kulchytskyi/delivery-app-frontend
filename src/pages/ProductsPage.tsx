@@ -55,11 +55,11 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             justAdded
               ? 'bg-green-500 text-white scale-90'
               : inCart
-              ? 'bg-primary/10 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground'
+              ? 'bg-green-500/90 text-white hover:bg-green-600'
               : 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
           }`}
         >
-          {justAdded ? <Check size={15} /> : <Plus size={15} />}
+          {inCart || justAdded ? <Check size={15} /> : <Plus size={15} />}
         </button>
       </div>
     </div>

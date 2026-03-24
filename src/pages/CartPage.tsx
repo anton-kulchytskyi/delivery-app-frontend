@@ -95,7 +95,6 @@ export function CartPage() {
     if (items.length === 0) { toast.error('Cart is empty'); return; }
     try {
       await submit(e);
-      if (!success) toast.success('Order placed successfully!');
     } catch (err) {
       toast.error((err as Error).message || 'Failed to place order');
     }
