@@ -13,7 +13,7 @@ import { Img } from '@/components/Img';
 
 const orderSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: z.string().min(7, 'Phone must be at least 7 characters'),
+  phone: z.string().regex(/^\+?[0-9\s\-()]{7,20}$/, 'Enter a valid phone number'),
   address: z.string().min(5, 'Address must be at least 5 characters'),
 });
 
