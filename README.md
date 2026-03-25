@@ -25,6 +25,18 @@ echo "VITE_API_URL=https://delivery-app-backend-production-de2c.up.railway.app" 
 npm run dev
 ```
 
+## Testing
+
+```bash
+npm run test
+```
+
+Covers: order form validation (Zod schemas), cart store logic (add, remove, merge reorder, discount calculation).
+
+## Complexity Level
+
+**Advanced** — includes all Base, Middle, and Advanced requirements plus Bonus features (Coupons page, Order History with reorder).
+
 ## Features
 
 - Browse restaurants and their menus

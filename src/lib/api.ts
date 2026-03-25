@@ -83,7 +83,7 @@ export interface CouponValidation {
 
 export interface CreateOrderBody {
   name: string;
-  email?: string;
+  email: string;
   phone: string;
   address: string;
   couponCode?: string;

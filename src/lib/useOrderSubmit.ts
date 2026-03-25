@@ -8,6 +8,7 @@ interface UseOrderSubmitResult {
   errors: OrderFormErrors;
   submitting: boolean;
   success: boolean;
+  orderId: string | null;
   setField: (field: keyof OrderFormData) => (e: React.ChangeEvent<HTMLInputElement>) => void;
   setFieldValue: (field: keyof OrderFormData, value: string) => void;
   submit: (e: React.FormEvent) => Promise<void>;
@@ -17,12 +18,14 @@ export function useOrderSubmit(initialValues?: Partial<OrderFormData>): UseOrder
   const { items, couponCode, clearCart } = useCart();
   const [form, setForm] = useState<OrderFormData>({
     name: initialValues?.name ?? '',
+    email: initialValues?.email ?? '',
     phone: initialValues?.phone ?? '+38',
     address: initialValues?.address ?? '',
   });
   const [errors, setErrors] = useState<OrderFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   const setField = (field: keyof OrderFormData) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,11 +55,12 @@ export function useOrderSubmit(initialValues?: Partial<OrderFormData>): UseOrder
 
     setSubmitting(true);
     try {
-      await api.createOrder({
+      const order = await api.createOrder({
         ...result.data,
         couponCode: couponCode ?? undefined,
         items: items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
       });
+      setOrderId(order.id);
       setSuccess(true);
       clearCart();
     } finally {
@@ -64,5 +68,5 @@ export function useOrderSubmit(initialValues?: Partial<OrderFormData>): UseOrder
     }
   };
 
-  return { form, errors, submitting, success, setField, setFieldValue, submit };
+  return { form, errors, submitting, success, orderId, setField, setFieldValue, submit };
 }

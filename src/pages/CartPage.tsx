@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Minus, Plus, X } from 'lucide-react';
+import { Minus, Plus, X, Copy, Check } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import { useOrderSubmit } from '@/lib/useOrderSubmit';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,7 @@ import { CouponInput } from '@/components/CouponInput';
 export function CartPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const prefill = ((location.state ?? {}) as { name?: string; phone?: string; address?: string });
+  const prefill = ((location.state ?? {}) as { name?: string; email?: string; phone?: string; address?: string });
 
   const items = useCart((s) => s.items);
   const updateQuantity = useCart((s) => s.updateQuantity);
@@ -21,7 +22,15 @@ export function CartPage() {
   const subtotal = useCart((s) => s.subtotal);
   const total = useCart((s) => s.total);
 
-  const { form, errors, submitting, success, setField, setFieldValue, submit } = useOrderSubmit(prefill);
+  const { form, errors, submitting, success, orderId, setField, setFieldValue, submit } = useOrderSubmit(prefill);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyId = () => {
+    if (!orderId) return;
+    navigator.clipboard.writeText(orderId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     if (items.length === 0) { toast.error('Cart is empty'); return; }
@@ -37,9 +46,25 @@ export function CartPage() {
       <div className="max-w-md mx-auto px-4 py-24 text-center animate-fade-up">
         <div className="text-6xl mb-6">✅</div>
         <h2 className="font-display text-3xl font-light mb-3">Order placed!</h2>
-        <p className="text-muted-foreground mb-8 text-sm">
+        <p className="text-muted-foreground mb-6 text-sm">
           We'll deliver your food as soon as possible.
         </p>
+        {orderId && (
+          <div className="mb-8 p-4 bg-card border border-border rounded-xl text-left">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Order ID</p>
+            <div className="flex items-center gap-2">
+              <p className="font-mono text-xs text-foreground flex-1 break-all">{orderId}</p>
+              <button
+                onClick={handleCopyId}
+                className="shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                title="Copy order ID"
+              >
+                {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Save this ID to find your order in history</p>
+          </div>
+        )}
         <div className="flex gap-3 justify-center">
           <button
             onClick={() => navigate('/')}
@@ -164,6 +189,23 @@ export function CartPage() {
                 {errors.name
                   ? <p className="text-xs mt-1 text-destructive">{errors.name}</p>
                   : <p className="text-xs mt-1 text-muted-foreground">Min 2, max 100 characters</p>
+                }
+              </div>
+
+              <div>
+                <Label htmlFor="email" className="text-xs text-muted-foreground mb-1.5 block">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={form.email}
+                  maxLength={200}
+                  onChange={setField('email')}
+                  className={`bg-secondary border-border text-sm ${errors.email ? 'border-destructive' : ''}`}
+                />
+                {errors.email
+                  ? <p className="text-xs mt-1 text-destructive">{errors.email}</p>
+                  : <p className="text-xs mt-1 text-muted-foreground">Your email address</p>
                 }
               </div>
 

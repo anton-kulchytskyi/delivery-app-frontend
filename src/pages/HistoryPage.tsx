@@ -14,7 +14,7 @@ function OrderCard({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
   const [reordering, setReordering] = useState(false);
 
-  const customerState = { name: order.name, phone: order.phone, address: order.address };
+  const customerState = { name: order.name, email: order.email, phone: order.phone, address: order.address };
 
   const handleReorder = async () => {
     setReordering(true);
@@ -97,27 +97,53 @@ function OrderCard({ order }: { order: Order }) {
   );
 }
 
+type SearchMode = 'phone' | 'id';
+
 export function HistoryPage() {
+  const [mode, setMode] = useState<SearchMode>('phone');
   const [phone, setPhone] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = phone.trim();
-    if (!trimmed) { setError('Please enter your phone number'); return; }
     setError('');
-    setLoading(true);
-    try {
-      const data = await api.searchOrders({ phone: trimmed });
-      setOrders(data);
-      if (data.length === 0) setError('No orders found for this phone number');
-    } catch {
-      setError('Could not find orders. Make sure the phone number matches the one you used when ordering.');
-    } finally {
-      setLoading(false);
+
+    if (mode === 'phone') {
+      const trimmed = phone.trim();
+      if (!trimmed) { setError('Please enter your phone number'); return; }
+      setLoading(true);
+      try {
+        const data = await api.searchOrders({ phone: trimmed });
+        setOrders(data);
+        if (data.length === 0) setError('No orders found for this phone number');
+      } catch {
+        setError('Could not find orders. Make sure the phone number matches the one you used when ordering.');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      const trimmed = orderId.trim();
+      if (!trimmed) { setError('Please enter an order ID'); return; }
+      setLoading(true);
+      try {
+        const data = await api.searchOrders({ id: trimmed });
+        setOrders(data);
+        if (data.length === 0) setError('No order found with this ID');
+      } catch {
+        setError('Invalid order ID format');
+      } finally {
+        setLoading(false);
+      }
     }
+  };
+
+  const switchMode = (next: SearchMode) => {
+    setMode(next);
+    setOrders(null);
+    setError('');
   };
 
   return (
@@ -129,17 +155,50 @@ export function HistoryPage() {
 
       {/* Search form */}
       <form onSubmit={handleSearch} className="p-5 bg-card border border-border rounded-xl mb-8 animate-fade-up stagger-1">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-          Find your orders by phone number
-        </p>
+        {/* Mode toggle */}
+        <div className="flex gap-1 mb-4 p-1 bg-secondary rounded-lg w-fit">
+          <button
+            type="button"
+            onClick={() => switchMode('phone')}
+            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              mode === 'phone'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            By phone
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode('id')}
+            className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              mode === 'id'
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            By order ID
+          </button>
+        </div>
+
         <div className="flex gap-3">
-          <Input
-            placeholder="+380991234567"
-            type="tel"
-            value={phone}
-            onChange={(e) => { setPhone(e.target.value); setError(''); }}
-            className={`bg-secondary border-border text-sm flex-1 ${error ? 'border-destructive' : ''}`}
-          />
+          {mode === 'phone' ? (
+            <Input
+              placeholder="+380991234567"
+              type="tel"
+              value={phone}
+              onChange={(e) => { setPhone(e.target.value); setError(''); }}
+              className={`bg-secondary border-border text-sm flex-1 ${error ? 'border-destructive' : ''}`}
+            />
+          ) : (
+            <Input
+              placeholder="Paste your order ID"
+              type="text"
+              value={orderId}
+              onChange={(e) => { setOrderId(e.target.value); setError(''); }}
+              className={`bg-secondary border-border text-sm flex-1 font-mono ${error ? 'border-destructive' : ''}`}
+            />
+          )}
           <button
             type="submit"
             disabled={loading}
